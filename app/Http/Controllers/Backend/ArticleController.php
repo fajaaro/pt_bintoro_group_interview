@@ -35,11 +35,9 @@ class ArticleController extends Controller
 
     public function edit($id)
     {
-    	$user = Auth::user();
-
         $article = Article::find($id);
     	
-    	if ($user->inRole('staff') && $article->user_id != $user->id) {
+    	if (!$this->validateStaff($article)) {
     		return redirect()->route('backend.articles.index')->with('failed', 'Unauthorized.');
     	}
 
@@ -48,11 +46,9 @@ class ArticleController extends Controller
 
     public function update(StoreOrUpdateArticleRequest $request, $id)
     {
-    	$user = Auth::user();
-
         $article = Article::find($id);
 
-    	if ($user->inRole('staff') && $article->user_id != $user->id) {
+    	if (!$this->validateStaff($article)) {
     		return redirect()->route('backend.articles.index')->with('failed', 'Unauthorized.');
     	}
 
@@ -65,16 +61,25 @@ class ArticleController extends Controller
 
     public function destroy($id)
     {
-    	$user = Auth::user();
-
         $article = Article::find($id);
     	
-    	if ($user->inRole('staff') && $article->user_id != $user->id) {
+    	if (!$this->validateStaff($article)) {
     		return redirect()->route('backend.articles.index')->with('failed', 'Unauthorized.');
     	}
 
     	$article->delete();
 
         return redirect()->route('backend.articles.index')->with('success', 'Berhasil menghapus artikel dengan ID ' . $id . '!');
+    }
+
+    private function validateStaff($article)
+    {
+    	$user = Auth::user();
+
+    	if ($user->inRole('staff') && $article->user_id != $user->id) {
+    		return false;
+    	}    	
+
+    	return true;
     }
 }
